@@ -9,12 +9,11 @@ import com.countryneighbourstour.service.CountryService;
 import com.countryneighbourstour.service.InputService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 @Service
 public class InputServiceImpl implements InputService {
@@ -46,6 +45,29 @@ public class InputServiceImpl implements InputService {
 
     private Result getFinalResult(TotalBudget totalBudget, BigDecimal budgetPerCountry, ArrayList<String> neighbours) {
 
+        int fullTravelCycleCounter;
+        int leftOverBudget;
+
+        int totalSumBudget = totalBudget.getTotalBudget().intValue();
+        int budgetEachCountry = budgetPerCountry.intValue();
+        Result result = new Result();
+
+        int sumNeededForFullTravelCycle = neighbours.size() * budgetEachCountry;
+
+        fullTravelCycleCounter = totalSumBudget / sumNeededForFullTravelCycle;
+        leftOverBudget = totalSumBudget - (sumNeededForFullTravelCycle * fullTravelCycleCounter);
+
+        result.setTravelAroundCountriesCount(fullTravelCycleCounter);
+        result.setLeftOverBudget(BigDecimal.valueOf(leftOverBudget));
+
+        HashMap<String, BigDecimal> currencyMap =
+                currencyNeededForEachCountry(fullTravelCycleCounter, totalBudget.getCurrency(), neighbours);
+        result.setNeededCurrencyForEachCountry(currencyMap);
+        return result;
+
+
+        //Previous code
+        /*
         int fullTravelCycleCounter = 0;
         double leftOverBudget = 0;
         double totalSum = totalBudget.getTotalBudget().doubleValue();
@@ -71,10 +93,34 @@ public class InputServiceImpl implements InputService {
                 currencyNeededForEachCountry(fullTravelCycleCounter, totalBudget.getCurrency(), neighbours);
         result.setNeededCurrencyForEachCountry(currencyMap);
         return result;
+        */
     }
 
-    private LinkedHashMap<String, BigDecimal> currencyNeededForEachCountry(int fullTravelCycleCounter, String currency, ArrayList<String> neighbours) {
-        LinkedHashMap<String, BigDecimal> map = new LinkedHashMap<>();
+    private HashMap<String, BigDecimal> currencyNeededForEachCountry(int fullTravelCycleCounter, String currency, ArrayList<String> neighbours) {
+        HashMap<String, BigDecimal> map = new HashMap<>();
+
+        for (String neighbour : neighbours) {
+            try {
+                Country neighbourOfSelectedCountry = this.countryRepository
+                        .findByCountryCode(neighbour);
+                String currencyOfNeighbour = neighbourOfSelectedCountry.getCurrencyCode();
+
+                double neededCurrency = this.countryService.
+                        getExchangeRate(currencyOfNeighbour, currency)
+                        .doubleValue();
+
+                neededCurrency *= (fullTravelCycleCounter * 100);
+                map.put(neighbour + " " + currencyOfNeighbour, BigDecimal.valueOf(neededCurrency).setScale(2, RoundingMode.HALF_EVEN));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return map;
+
+        //Previous Code
+        /*
+                LinkedHashMap<String, BigDecimal> map = new LinkedHashMap<>();
         neighbours.
                 forEach(n -> {
                     try {
@@ -91,6 +137,6 @@ public class InputServiceImpl implements InputService {
                         e.printStackTrace();
                     }
                 });
-        return map;
+        */
     }
 }

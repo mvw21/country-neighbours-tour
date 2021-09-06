@@ -4,7 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 @Entity
 public class Result {
@@ -12,12 +12,12 @@ public class Result {
     private Long id;
     private int travelAroundCountriesCount;
     private BigDecimal leftOverBudget;
-    private LinkedHashMap<String,BigDecimal> neededCurrencyForEachCountry;
+    private HashMap<String,BigDecimal> neededCurrencyForEachCountry;
 
     public Result(int travelAroundCountriesCount, BigDecimal leftOverBudget) {
         this.travelAroundCountriesCount = travelAroundCountriesCount;
         this.leftOverBudget = leftOverBudget;
-        this.neededCurrencyForEachCountry = new LinkedHashMap<>();
+        this.neededCurrencyForEachCountry = new HashMap<>();
     }
 
     public Result() {
@@ -40,11 +40,11 @@ public class Result {
     }
 
     @Transient
-    public LinkedHashMap<String, BigDecimal> getNeededCurrencyForEachCountry() {
+    public HashMap<String, BigDecimal> getNeededCurrencyForEachCountry() {
         return neededCurrencyForEachCountry;
     }
 
-    public void setNeededCurrencyForEachCountry(LinkedHashMap<String, BigDecimal> neededCurrencyForEachCountry) {
+    public void setNeededCurrencyForEachCountry(HashMap<String, BigDecimal> neededCurrencyForEachCountry) {
         this.neededCurrencyForEachCountry = neededCurrencyForEachCountry;
     }
 }

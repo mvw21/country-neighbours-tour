@@ -17,7 +17,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,37 @@ public class CountryServiceImpl implements CountryService {
 
         CountrySeedDto[] countrySeedDtos = this.gson
                 .fromJson(new FileReader(GlobalConstants.COUNTRIES_FILE_PATH), CountrySeedDto[].class);
-        System.out.println();
+
+        for(CountrySeedDto countrySeedDto : countrySeedDtos){
+            if (this.countryRepository
+                    .findByCountryName(countrySeedDto.getCountryName()) == null) {
+
+                Country country = this.modelMapper.map(countrySeedDto, Country.class);
+                String currency = "";
+
+                try {
+                    currency = getCountryCurrency(country.getCountryCode());
+                    System.out.println(currency);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                country.setCurrencyCode(currency);
+                this.countryRepository.saveAndFlush(country);
+
+                sb.append(String.format("Successfully imported country - %s",
+                        countrySeedDto.getCountryName()))
+                        .append(System.lineSeparator());
+
+            } else {
+                sb.append("Already in DB")
+                        .append(System.lineSeparator());
+            }
+
+
+        }
+        //Previous Code
+        /*
         Arrays.stream(countrySeedDtos)
                 .forEach(dto -> {
                     if (this.countryRepository
@@ -71,7 +100,7 @@ public class CountryServiceImpl implements CountryService {
                     }
 
                 });
-
+                */
 
     }
 
@@ -122,6 +151,7 @@ public class CountryServiceImpl implements CountryService {
                 new InputStreamReader(con.getInputStream()));
         String inputLine;
         StringBuilder response = new StringBuilder();
+
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);
         }
